@@ -165,7 +165,7 @@ function draw() {
   bandicoots += bandicootGrowth;
 
   // Cap the bandicoot population to a percentage of the grass population
-  let bandicootLimit = grass * 0.08;
+  let bandicootLimit = grass * 0.12; // Adjust this for bandicoot ratio to grass
   if (bandicoots > bandicootLimit) {
     bandicoots = bandicootLimit;
   }
