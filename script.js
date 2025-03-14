@@ -1,9 +1,9 @@
 let grass, pademelons, devils, bandicoots, chart;
 let season = 0; // 0: Spring, 1: Summer, 2: Autumn, 3: Winter
-let seasonDuration = 400; // Increased duration of each season in frames
+let seasonDuration = 300; // Reduced duration of each season in frames
 let showSeasons = true;
 let showDisasters = true;
-let disasterDuration = 150; // Extended duration to show disaster message
+let disasterDuration = 100; // Reduced duration to show disaster message
 let disasterFrame = -disasterDuration; // Frame when the last disaster occurred
 let isPaused = false; // Pause state
 let grassLimitEnabled = true; // Grass limit state
@@ -17,26 +17,26 @@ let rangerBadgeMessageShown = false; // Flag to prevent repeated messages
 
 let objectives = [
   { description: "Increase pademelon population to 200", target: 200, achieved: false, points: 200 },
-  { description: "Increase pademelon population to 280", target: 280, achieved: false, points: 250 },
-  { description: "Increase devil population to 100", target: 100, achieved: false, points: 200 },
-  { description: "Increase grass population to 1000", target: 1000, achieved: false, points: 200 },
-  { description: "Survive 10 natural disasters", target: 10, achieved: false, points: 100 },
-  { description: "Maintain a stable ecosystem for 5000 frames", target: 5000, achieved: false, points: 50 },
-  { description: "Increase bandicoot population to 150", target: 150, achieved: false, points: 200 }
+  { description: "Increase pademelon population to 250", target: 250, achieved: false, points: 250 },
+  { description: "Increase devil population to 80", target: 80, achieved: false, points: 200 },
+  { description: "Increase grass population to 900", target: 900, achieved: false, points: 200 },
+  { description: "Survive 8 natural disasters", target: 8, achieved: false, points: 100, count: 0 }, // Initialize count
+  { description: "Maintain a stable ecosystem for 4000 frames", target: 4000, achieved: false, points: 100 },
+  { description: "Increase bandicoot population to 130", target: 130, achieved: false, points: 200 }
 ];
 
 let ongoingObjectives = [
-  { description: "Maintain grass population above 800 for 1000 frames", target: 1000, achieved: false, points: 300, type: "grass", condition: (grass) => grass > 800 },
-  { description: "Maintain pademelon population above 250 for 1000 frames", target: 1000, achieved: false, points: 300, type: "pademelons", condition: (pademelons) => pademelons > 250 },
-  { description: "Maintain devil population above 80 for 1000 frames", target: 1000, achieved: false, points: 300, type: "devils", condition: (devils) => devils > 80 },
-  { description: "Maintain bandicoot population above 100 for 1000 frames", target: 1000, achieved: false, points: 300, type: "bandicoots", condition: (bandicoots) => bandicoots > 100 },
-  { description: "Maintain a balanced ecosystem for 2000 frames", target: 2000, achieved: false, points: 500, type: "balanced", condition: (grass, pademelons, devils, bandicoots) => grass > 500 && pademelons > 100 && devils > 50 && bandicoots > 100 }
+  { description: "Maintain grass population above 700 for 800 frames", target: 800, achieved: false, points: 300, type: "grass", condition: (grass) => grass > 700 },
+  { description: "Maintain pademelon population above 220 for 800 frames", target: 800, achieved: false, points: 300, type: "pademelons", condition: (pademelons) => pademelons > 220 },
+  { description: "Maintain devil population above 70 for 800 frames", target: 800, achieved: false, points: 300, type: "devils", condition: (devils) => devils > 70 },
+  { description: "Maintain bandicoot population above 90 for 800 frames", target: 800, achieved: false, points: 300, type: "bandicoots", condition: (bandicoots) => bandicoots > 90 },
+  { description: "Maintain a balanced ecosystem for 1500 frames", target: 1500, achieved: false, points: 500, type: "balanced", condition: (grass, pademelons, devils, bandicoots) => grass > 500 && pademelons > 100 && devils > 50 && bandicoots > 100 }
 ];
 
 let newAchievements = [
   { description: "Ecosystem Guardian: Achieve all ongoing objectives", achieved: false, points: 500 },
   { description: "Disaster Resilience: Survive 20 natural disasters", achieved: false, count: 0, target: 20, points: 200 },
-  { description: "Master Ecologist: Maintain a stable ecosystem for 10,000 frames", achieved: false, frames: 0, target: 10000, points: 300 },
+  { description: "Master Ecologist: Maintain a stable ecosystem for 10,000 frames", achieved: false, frames: 0, target: 10000, points: 400 },
   { description: "Population Expert: Achieve grass population of 1500, pademelon population of 350, devil population of 150, and bandicoot population of 200", achieved: false, points: 400 }
 ];
 
@@ -96,6 +96,7 @@ function setup() {
   resetSim(); // Initialize the simulation with stable values
   targetRainfall = currentRainfall = parseFloat(document.getElementById("rainfall").value);
   targetTemperature = currentTemperature = parseFloat(document.getElementById("temperature").value);
+  console.log("Setup complete");
 }
 
 function draw() {
@@ -141,18 +142,52 @@ function draw() {
   currentTemperature += (targetTemperature - currentTemperature) * interpolationSpeed;
 
   // Combine seasonal and slider values
-  let rainfall = currentRainfall + parseFloat(document.getElementById("rainfall").value) - 50;
-  let temperature = currentTemperature + parseFloat(document.getElementById("temperature").value) - 25;
-  let invasiveSpecies = parseFloat(document.getElementById("invasiveSpecies").value);
-  let visitors = parseFloat(document.getElementById("visitors").value);
+  let rainfallElement = document.getElementById("rainfall");
+  let temperatureElement = document.getElementById("temperature");
+  let invasiveSpeciesElement = document.getElementById("invasiveSpecies");
+  let humanImpactElement = document.getElementById("humanImpact");
+
+  console.log(rainfallElement, temperatureElement, invasiveSpeciesElement, humanImpactElement);
+
+  let rainfall = currentRainfall + parseFloat(rainfallElement.value) - 50;
+  let temperature = currentTemperature + parseFloat(temperatureElement.value) - 25;
+  let invasiveSpecies = parseFloat(invasiveSpeciesElement.value);
+  let humanImpact = parseFloat(humanImpactElement.value); // Add human impact slider value
 
   // Ecosystem Dynamics
-  grass += (rainfall / 20 - invasiveSpecies) - (50 - rainfall) / 15; // Adjusted growth rate for grass
-  pademelons += grass / 200 - devils / 15 - visitors - temperature / 10; // Adjusted growth for pademelons
+  grass += (rainfall / 15 - invasiveSpecies) - (50 - rainfall) / 10; // Adjusted growth rate for grass
 
-  // Adjusted growth for devils with predation effects
-  let devilGrowth = (pademelons / 80 + bandicoots / 50) * (1 - devils / (pademelons + bandicoots + 1)) - temperature / 15 - visitors / 6;
+  // Pademelons
+  pademelons += grass / 150 - devils / 10 - humanImpact - temperature / 8;
+  if (temperature > 30) {
+    pademelons -= (temperature - 30) / 5; // Higher reduction for high temperatures
+  }
+  if (invasiveSpecies > 5) {
+    pademelons -= invasiveSpecies / 10; // Moderate reduction for invasive species
+  }
+
+  // Devils
+  let devilGrowth = (pademelons / 60 + bandicoots / 40) * (1 - devils / (pademelons + bandicoots + 1)) - temperature / 10 - humanImpact / 5;
+  if (temperature < 10 || temperature > 35) {
+    devilGrowth -= Math.abs(temperature - 22) / 10; // Wider tolerance but still affected by extremes
+  }
+  if (humanImpact > 5) {
+    devilGrowth -= humanImpact / 5; // High reduction for human impact
+  }
   devils += devilGrowth;
+
+  // Bandicoots
+  let bandicootGrowth = (grass / 250 + pademelons / 40) * (1 - bandicoots / (grass + 1)) - devils / 8 - invasiveSpecies / 8 - humanImpact / 10;
+  if (temperature > 25) {
+    bandicootGrowth -= (temperature - 25) / 5; // Sensitive to high temperatures
+  }
+  if (invasiveSpecies > 5) {
+    bandicootGrowth -= invasiveSpecies / 5; // High reduction for invasive species
+  }
+  if (humanImpact > 5) {
+    bandicootGrowth -= humanImpact / 10; // Moderate reduction for human impact
+  }
+  bandicoots += bandicootGrowth;
 
   // Cap the devil population to a percentage of the available food sources
   let devilLimit = (pademelons + bandicoots) * 0.5;
@@ -160,14 +195,13 @@ function draw() {
     devils = devilLimit;
   }
 
-  // Dynamic growth model for bandicoots with increased predation effects
-  let bandicootGrowth = (grass / 300 + pademelons / 50) * (1 - bandicoots / (grass + 1)) - devils / 10 - invasiveSpecies / 10;
-  bandicoots += bandicootGrowth;
-
   // Cap the bandicoot population to a percentage of the grass population
   let bandicootLimit = grass * 0.12; // Adjust this for bandicoot ratio to grass
   if (bandicoots > bandicootLimit) {
     bandicoots = bandicootLimit;
+  }
+  if (bandicoots < devils * 0.5) {
+    bandicoots = devils * 0.5;
   }
 
   // Constrain Populations
@@ -229,6 +263,9 @@ function draw() {
   updatePoints(); // Call updatePoints within the draw function
   updatePointsDisplay(); // Update points display
   checkAchievements(); // Check for achievements
+
+  // Debugging statements
+  console.log(`Frame: ${frameCount}, Grass: ${grass}, Pademelons: ${pademelons}, Devils: ${devils}, Bandicoots: ${bandicoots}`);
 }
 
 function resetSim() {
@@ -262,12 +299,14 @@ function resetSim() {
   document.getElementById("invasiveSpecies").value = 5;
   document.getElementById("invasiveSpeciesValue").innerText = 5;
 
-  document.getElementById("visitors").value = 2;
-  document.getElementById("visitorsValue").innerText = 2;
+  document.getElementById("humanImpact").value = 2;
+  document.getElementById("humanImpactValue").innerText = 2;
 
   // Reset interpolated values
   targetRainfall = currentRainfall = 50;
   targetTemperature = currentTemperature = 25;
+
+  console.log("Simulation reset");
 }
 
 function updateValue(id) {
@@ -390,6 +429,18 @@ function checkEcosystemStability() {
       }, 3000);
     }
   }
+
+  let masterEcologistAchievement = newAchievements.find(ach => ach.description === "Master Ecologist: Maintain a stable ecosystem for 10,000 frames");
+  if (masterEcologistAchievement && !masterEcologistAchievement.achieved) {
+    masterEcologistAchievement.frames++;
+    if (masterEcologistAchievement.frames >= masterEcologistAchievement.target) {
+      masterEcologistAchievement.achieved = true;
+      points += masterEcologistAchievement.points; // Add points
+      alert(`Achievement Unlocked: ${masterEcologistAchievement.description}\nPoints Awarded: ${masterEcologistAchievement.points}`);
+      updatePointsDisplay(); // Update points display
+      displayAchievement(masterEcologistAchievement.description); // Display achievement
+    }
+  }
 }
 
 // Random Events
@@ -423,8 +474,21 @@ function handleEvent(event) {
   document.getElementById("disasterMessage").style.display = "block";
   disasterFrame = frameCount;
 
-  // Update achievement for surviving natural disasters
-  let disasterAchievement = achievements.find(ach => ach.description === "Survive 10 natural disasters");
+  // Update objective for surviving 8 natural disasters
+  let disasterObjective = objectives.find(obj => obj.description === "Survive 8 natural disasters");
+  if (disasterObjective) {
+    disasterObjective.count++;
+    if (disasterObjective.count >= disasterObjective.target && !disasterObjective.achieved) {
+      disasterObjective.achieved = true;
+      points += disasterObjective.points; // Add points
+      alert(`Objective Achieved: ${disasterObjective.description}\nPoints Awarded: ${disasterObjective.points}`);
+      updatePointsDisplay(); // Update points display
+      updateObjectiveDisplay(); // Update objective display
+    }
+  }
+
+  // Update achievement for surviving 20 natural disasters
+  let disasterAchievement = newAchievements.find(ach => ach.description === "Disaster Resilience: Survive 20 natural disasters");
   if (disasterAchievement) {
     disasterAchievement.count++;
     if (disasterAchievement.count >= disasterAchievement.target && !disasterAchievement.achieved) {
@@ -432,17 +496,11 @@ function handleEvent(event) {
       points += disasterAchievement.points; // Add points
       alert(`Achievement Unlocked: ${disasterAchievement.description}\nPoints Awarded: ${disasterAchievement.points}`);
       updatePointsDisplay(); // Update points display
-      document.getElementById("achievementMessage").innerText = `Achievement Unlocked: ${disasterAchievement.description}`;
-      document.getElementById("achievementMessage").style.display = "block";
-      setTimeout(() => {
-        document.getElementById("achievementMessage").style.display = "none";
-      }, 3000);
       displayAchievement(disasterAchievement.description); // Display achievement
     }
   }
 }
 
-// Check Achievements
 function checkAchievements() {
   let stabilityAchievement = achievements.find(ach => ach.description === "Maintain a stable ecosystem for 5000 frames");
   if (stabilityAchievement && !stabilityAchievement.achieved) {
@@ -457,7 +515,6 @@ function checkAchievements() {
       setTimeout(() => {
         document.getElementById("achievementMessage").style.display = "none";
       }, 3000);
-      displayAchievement(stabilityAchievement.description); // Display achievement
     }
   }
 
@@ -491,7 +548,6 @@ function checkAchievements() {
     }
   });
 }
-
 function displayAchievement(description) {
   console.log(`Displaying achievement: ${description}`); // Add this line
   const achievementElement = document.createElement("div");
