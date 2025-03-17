@@ -318,8 +318,8 @@ function resetSim() {
   updateObjectiveDisplay(); // Update objective display
 
   // Reset slider values
-  document.getElementById("rainfall").value = 50;
-  document.getElementById("rainfallValue").innerText = 50;
+  document.getElementById("rainfall").value = 60; // Adjust this value to set the initial rainfall
+  document.getElementById("rainfallValue").innerText = 60; // Update the displayed value
 
   document.getElementById("temperature").value = 25;
   document.getElementById("temperatureValue").innerText = 25;
